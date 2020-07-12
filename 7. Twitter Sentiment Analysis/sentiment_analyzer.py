@@ -52,7 +52,7 @@ class PreprocessTweets:
                 if tweet["label"] == "positive" or tweet["label"] == "negative":
                     processed_tweets.append((self._process_tweet(tweet["text"]), tweet["label"]))
             else:
-                processed_tweets.append((self._process_tweet(tweet["text"]), tweet["label"]))
+                processed_tweets.append((self._process_tweet(tweet["text"]), None))
 
         return processed_tweets
 
@@ -87,18 +87,23 @@ def build_vocabulary(preprocessed_training_data):
     return word_features
 
 
+training_data_features = build_vocabulary(preprocessed_training_set)
+
+
 def extract_features(tweet):
     tweet_words = set(tweet)
     features = {}
     for word in training_data_features:
-        features['contains(%s)' % word] = (word in tweet_words)
+        is_feature_in_words = word in tweet_words
+        features[word] = is_feature_in_words
     return features
 
 
-training_data_features = build_vocabulary(preprocessed_training_set)
 training_features = nltk.classify.apply_features(extract_features, preprocessed_training_set)
 
 NBayesClassifier = nltk.NaiveBayesClassifier.train(training_features)
+
+# label = NBayesClassifier.classify(extract_features("I am happy"))
 
 classified_result_labels = []
 for tweet in preprocessed_test_set:
@@ -106,7 +111,9 @@ for tweet in preprocessed_test_set:
 
 if classified_result_labels.count('positive') > classified_result_labels.count('negative'):
     print("Overall Positive Sentiment")
-    print("Positive Sentiment Percentage = " + str(100 * classified_result_labels.count('positive') / len(classified_result_labels)) + "%")
+    print("Positive Sentiment Percentage = " + str(
+        100 * classified_result_labels.count('positive') / len(classified_result_labels)) + "%")
 else:
     print("Overall Negative Sentiment")
-    print("Negative Sentiment Percentage = " + str(100 * classified_result_labels.count('negative') / len(classified_result_labels)) + "%")
+    print("Negative Sentiment Percentage = " + str(
+        100 * classified_result_labels.count('negative') / len(classified_result_labels)) + "%")
